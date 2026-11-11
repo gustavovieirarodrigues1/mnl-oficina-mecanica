@@ -56,7 +56,9 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/actuator/**",
+                                "/actuator/health",
+                                "/actuator/health/**",
+                                "/actuator/prometheus",
                                 "/")
                         .permitAll()
 
@@ -67,6 +69,7 @@ public class SecurityConfig {
                                 "/auth/change-password")
                         .permitAll()
 
+                        .requestMatchers("/actuator", "/actuator/**").denyAll()
                         .anyRequest().authenticated())
 
                 .exceptionHandling(ex -> ex

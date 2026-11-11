@@ -1,0 +1,14 @@
+local.file_match "workshop" {
+  path_targets = [{"__path__" = "/var/log/workshop/*.json", "job" = "workshop"}]
+}
+
+loki.source.file "workshop" {
+  targets    = local.file_match.workshop.targets
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
