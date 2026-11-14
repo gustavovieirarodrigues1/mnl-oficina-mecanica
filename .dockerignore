@@ -1,0 +1,5 @@
+.git
+logs
+observability/.env
+target/*
+!target/mechanic-workshop-system-1.1.0.jar

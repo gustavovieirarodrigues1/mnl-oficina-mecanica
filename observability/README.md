@@ -1,5 +1,7 @@
 # Observabilidade da oficina
 
+Para a demonstracao local com todos os componentes em containers e sem bind mounts do Windows, use [o guia e roteiro de 2min30](DEMONSTRACAO.md). O `demo-start.ps1` preserva o schema existente, usa um volume compartilhado para os logs e inicia a stack de `compose.demo.yaml`.
+
 O monolito publica metricas Micrometer/Prometheus, logs JSON ECS e traces OpenTelemetry via OTLP/HTTP. A stack local provisiona Prometheus, Grafana, Loki, Alloy e Tempo. O dashboard inclui throughput, erros 5xx, latencia p95, memoria JVM, pool JDBC, duracao Kafka e logs com link para traces.
 
 Esta entrega instrumenta o servico existente. Para rastrear um fluxo inteiro entre microsservicos, todos os participantes precisam extrair e propagar o mesmo contexto W3C. A separacao dos microsservicos e a implementacao da Saga sao trabalhos independentes.
@@ -84,6 +86,8 @@ docker compose -f observability/compose.yaml exec prometheus promtool check rule
 O teste HTTP com servidor real verifica propagacao de `traceparent`, correlacao e ausencia da query secreta no log, histograma Prometheus, tags, probes e protecao dos endpoints. Um terceiro teste usa o produtor Kafka em memoria para verificar a injecao de `traceparent` com o mesmo trace pai. Os testes usam uma aplicacao sem banco e sem broker; nao comprovam exportacao ao Tempo nem o consumo por outro servico real.
 
 Validacao realizada em 11/11/2026: 515 testes unitarios e os tres testes de observabilidade passaram, sem falhas. A configuracao Compose e o JSON do dashboard foram validados. A engine Docker estava indisponivel; a stack, o `promtool`, os testes existentes que dependem de containers e o fluxo distribuido real nao foram executados. Os relatorios locais ficam em `target/surefire-reports`; nao foi medida a cobertura completa nesta execucao.
+
+Validacao adicional em 14/11/2026: a stack de `compose.demo.yaml` foi executada no Docker. Foram confirmados health UP, coleta Prometheus UP, validacao de configuracao e das tres regras pelo promtool, dashboard renderizado, logs no Loki e trace HTTP no Tempo aberto a partir do log. O script de inicializacao foi executado com sucesso. O fluxo de negocio distribuido por Kafka continua fora dessa demonstracao; veja [o roteiro](DEMONSTRACAO.md).
 
 Para evidenciar o fluxo distribuido: abra uma OS e finalize a inspecao pelo fluxo da API; processe a decisao no servico de orcamento instrumentado. No Tempo, confira os spans HTTP, producer e consumer no mesmo trace. Partindo do trace, abra os logs correspondentes. Capture o dashboard sob trafego e um alerta de indisponibilidade ao parar a aplicacao por mais de um minuto. Esses passos exigem a stack e os servicos em execucao.
 
