@@ -37,3 +37,6 @@ build/
 .claude/
 
 /k8s-dev
+# Logs locais de observabilidade
+/logs/
+/observability/.env
