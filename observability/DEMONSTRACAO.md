@@ -15,11 +15,17 @@ O primeiro script inicia a aplicacao e a stack em containers, sem exigir compart
 
 O segundo script faz 120 chamadas publicas e algumas chamadas sem autenticacao, que retornam 401 de proposito. Nao altera ordens de servico. Esses 401 demonstram rejeicao de acesso, nao falha interna 5xx. Registra um trace identificavel em `logs/demo-request.json`.
 
-Aguarde 30 segundos depois do trafego. Antes de gravar, deixe abertas estas abas:
+Aguarde 30 segundos depois do trafego. O gerador tambem cria **`logs/demo-links.md`**, com links locais que ja abrem o dashboard no periodo correto, o log filtrado e o trace correspondente. Se os dados foram gerados antes dessa atualizacao, execute `./observability/demo-links.ps1`.
+
+**Abra os links de `logs/demo-links.md` antes de gravar.** O periodo fica fixado: os dados continuam visiveis mesmo depois de quinze minutos. Traces sao retidos por 24 horas; apos esse prazo, gere novos dados.
+
+Antes de gravar, deixe abertas estas abas:
 
 | Tela | Acesso | O que conferir |
 | --- | --- | --- |
 | Grafana | http://localhost:3000/d/workshop-observability | Usuario `admin`; senha em `observability/.env`. Intervalo Last 15 minutes, atualizacao 30s |
+| Logs no Loki | http://localhost:3000/explore — use o link **Log HTTP** de `logs/demo-links.md` para abrir ja filtrado | Metodo, rota, status, duracao e traceId |
+| Trace no Tempo | http://localhost:3000/explore — use o link **Trace correspondente** de `logs/demo-links.md` | Linha do tempo da mesma requisicao |
 | Prometheus Targets | http://localhost:9090/targets | Job `workshop` com estado UP |
 | Prometheus Alerts | http://localhost:9090/alerts | As tres regras carregadas |
 | Saude da API | http://localhost:8080/actuator/health | `status: UP` |
@@ -56,21 +62,33 @@ No trace, mostre a linha do tempo e a duracao do span HTTP. Em uma chamada GET s
 
 ### 0:00 a 0:20 — Grafana aberto
 
+**Tela e URL:** [Dashboard](http://localhost:3000/d/workshop-observability). Prefira o link com periodo fixado em `logs/demo-links.md`. Deixe visiveis os graficos de requisicoes, erros e latencia.
+
 "Esta e a observabilidade da nossa aplicacao de oficina mecanica. Organizamos a investigacao em tres tipos de dados: metricas, logs e traces. As metricas mostram o comportamento geral; os logs registram os acontecimentos; e os traces permitem acompanhar uma requisicao e identificar onde o tempo foi gasto."
 
 ### 0:20 a 1:00 — Graficos do dashboard
+
+**Tela e URL:** continue no [dashboard](http://localhost:3000/d/workshop-observability). Aponte para requisicoes por segundo, erros 5xx e p95; depois role para memoria JVM e conexoes JDBC. Nao precisa abrir o endpoint de metricas.
 
 "Neste dashboard, acompanhamos o volume de requisicoes, a proporcao de erros internos e a latencia p95. O p95 indica que aproximadamente 95% das chamadas terminaram dentro desse tempo. Tambem observamos a memoria da JVM e as conexoes com o banco. Isso ajuda a distinguir um aumento de trafego de problemas de desempenho ou saturacao. Os dados sao coletados pelo Prometheus a cada quinze segundos."
 
 ### 1:00 a 1:40 — Log e trace previamente abertos
 
+**1:00 a 1:20 — Tela Logs:** [Grafana Explore](http://localhost:3000/explore), fonte Loki. Abra o link **Log HTTP** de `logs/demo-links.md`; o filtro da chamada ja vem preenchido. Expanda o registro e mostre status, duracao e traceId.
+
+**1:20 a 1:40 — Tela Trace:** [Grafana Explore](http://localhost:3000/explore), fonte Tempo. Troque para a aba aberta pelo link **Trace correspondente** de `logs/demo-links.md`. Mostre o mesmo identificador e a linha do tempo. Tambem pode abrir pelo campo derivado TraceID do log.
+
 "Ao investigar uma chamada especifica, abrimos seu log estruturado. Aqui temos metodo, rota, status e duracao. O trace ID conecta esse registro ao trace armazenado no Tempo. Abrindo esse identificador, conseguimos ver a linha do tempo da chamada. A instrumentacao tambem foi habilitada no produtor e no consumidor Kafka para propagar o contexto quando ha troca de mensagens. Nesta tela, estou mostrando o trace HTTP que gerei para a demonstracao."
 
 ### 1:40 a 2:10 — Prometheus Alerts
 
+**Tela e URL:** [Alertas do Prometheus](http://localhost:9090/alerts). Expanda WorkshopUnavailable e aponte a duracao `for: 1m`. Mostre tambem os nomes WorkshopHighErrorRate e WorkshopHighLatency. Estado INACTIVE e normal com a aplicacao saudavel; nao e preciso derrubar a aplicacao para apresentar.
+
 "Tambem configuramos tres alertas: indisponibilidade, aumento de erros internos e latencia elevada. Eles usam janelas de tempo para evitar alertas por oscilacoes momentaneas. O alerta de indisponibilidade dispara apos um minuto de falha na coleta. Os outros observam erros acima de cinco por cento e p95 acima de dois segundos, com volume minimo de chamadas. Aqui mostramos as regras carregadas; notificacoes externas ainda nao estao configuradas."
 
 ### 2:10 a 2:30 — Voltar ao Grafana
+
+**Tela e URL:** volte ao [dashboard](http://localhost:3000/d/workshop-observability) da primeira aba. Encerre com os graficos visiveis.
 
 "O Grafana centraliza a visualizacao. O Prometheus armazena metricas, o Loki recebe logs coletados pelo Alloy e o Tempo armazena traces. Assim, conseguimos partir de um sintoma no dashboard e chegar a uma chamada especifica, com evidencias para investigar sua causa."
 

@@ -15,5 +15,6 @@ for ($i = 0; $i -lt $Requests; $i++) {
     }
     Start-Sleep -Milliseconds 500
 }
+& (Join-Path $PSScriptRoot 'demo-links.ps1')
 Write-Host "Trace da demonstracao: $traceId"
 Write-Host 'Aguarde 30 segundos e atualize o Grafana com intervalo Last 15 minutes.'
